@@ -3,6 +3,7 @@ type ErrorCallback = (errorMessage: string) => void;
 type ProgressCallback = (s: string) => void;
 type ReadLineHandler = (line: string) => void;
 type CloseHandler = () => void;
+type LoadRawFileHandler = (rawStr: string) => void;
 
 class FileNode {
 
@@ -22,6 +23,7 @@ class FileNode {
 class FileReader {
     readLineHandler_: ReadLineHandler|null = null;
     closeHandler_: CloseHandler|null = null;
+    loadRawFileHandler_: LoadRawFileHandler|null = null;
     content_ = "";
     cancel_ = false;
     
@@ -38,6 +40,15 @@ class FileReader {
     }
     onClose(closeHandler: CloseHandler) {
         this.closeHandler_ = closeHandler;
+    }
+    onLoadRawFile(loadRawFileHandler: LoadRawFileHandler) {
+        this.loadRawFileHandler_ = loadRawFileHandler;
+    }
+
+    loadRawFile() {
+        this.loadRawFileHandler_?.(this.content_);
+        if (!this.cancel_)
+            this.closeHandler_?.();
     }
     
     load() {

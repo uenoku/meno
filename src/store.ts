@@ -51,6 +51,7 @@ class Store {
         this.loader_ = new Loader();
 
         this.on(ACTION.FILE_IMPORT, (inputStr: string) => {
+            console.log("foo", inputStr);
             let fileReader = new FileReader(inputStr);
 
             this.treeMapRenderer.clear();

@@ -9,7 +9,7 @@ class TreeMapCanvasContext {
     viewPoint = [0, 0];
     curSize = [0, 0];
     oldSize = [0, 0];
-    
+
     inZoomAnimation = false;
     zoomAnimationDirection = true;
     zoomEndLevel = 0;
@@ -22,18 +22,18 @@ class TreeMapCanvasContext {
     inSwipe = false;
     initialTouchDistance = 0;
     initialZoomLevel = 0;
-    lastTouchCenter: { x: number; y: number } = {x: 0, y: 0};    // ２本指でのタッチ中心
-    lastTouchPosition: { x: number; y: number } = {x: 0, y: 0}; // 一本指でのタッチ位置
+    lastTouchCenter: { x: number; y: number } = { x: 0, y: 0 };    // ２本指でのタッチ中心
+    lastTouchPosition: { x: number; y: number } = { x: 0, y: 0 }; // 一本指でのタッチ位置
 
-    resizeObserver: ResizeObserver|null = null;
+    resizeObserver: ResizeObserver | null = null;
 
     ZOOM_RATIO = 0.8;
     ZOOM_ANIMATION_SPEED = 0.07;
-    zoomAnimationID: number|null = null;
+    zoomAnimationID: number | null = null;
 };
 
 
-const TreeMapCanvas = (props: {store: Store;}) => {
+const TreeMapCanvas = (props: { store: Store; }) => {
     const store = props.store;
     const contextRef = useRef(new TreeMapCanvasContext);
     const ctx = contextRef.current; // 再レンダリングのたびにクロージャーが作られるので，参照をここでとっても問題がない
@@ -41,7 +41,7 @@ const TreeMapCanvas = (props: {store: Store;}) => {
     const divRef = useRef(null); // div の DOM
     const canvasRef = useRef<HTMLCanvasElement>(null); // canvas の DOM
 
-    useEffect(() => {   
+    useEffect(() => {
         initialize();       // [] で依存なしで useEffect を使うとマウント時に呼ばれる
         return finalize;    // useEffect は終了処理への参照を返すことになっている
     }, []);
@@ -58,7 +58,7 @@ const TreeMapCanvas = (props: {store: Store;}) => {
         canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
         canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
         canvas.addEventListener("touchend", handleTouchEnd, { passive: false });
-        
+
         document.onkeydown = handleKeydown
 
         store.on(CHANGE.CANVAS_ZOOM_IN, () => {
@@ -72,15 +72,15 @@ const TreeMapCanvas = (props: {store: Store;}) => {
         });
         store.on(CHANGE.CANVAS_POINTER_CHANGED, () => {
             draw();
-        });    
-        store.on(CHANGE.FIT_TO_CANVAS, function(){
+        });
+        store.on(CHANGE.FIT_TO_CANVAS, function () {
             fitToCanvas();
         });
 
         // リサイズ時のリスナー
         const observer = new ResizeObserver((entries) => {
             // handleResize 内で DOM をいじる必要があるが，ResizeObserver がそれを許さないので非同期で遅延実行
-            setTimeout(handleResize, 0); 
+            setTimeout(handleResize, 0);
         });
         if (divRef.current) {
             observer.observe(divRef.current);
@@ -98,10 +98,10 @@ const TreeMapCanvas = (props: {store: Store;}) => {
             ctx.resizeObserver?.unobserve(divRef.current);
         }
         if (ctx.zoomAnimationID) {
-            clearInterval(ctx.zoomAnimationID); 
+            clearInterval(ctx.zoomAnimationID);
         }
     };
-    
+
     const handleMouseDoubleClick = (e: MouseEvent) => {
         if (!store.tree) return;
         const zoomIn = !e.shiftKey;
@@ -124,9 +124,9 @@ const TreeMapCanvas = (props: {store: Store;}) => {
             ctx.prevMousePoint = [e.offsetX, e.offsetY];
             draw();
         }
-        let pointedFileNode = 
+        let pointedFileNode =
             store.treeMapRenderer.getFileNodeFromPoint([e.offsetX, e.offsetY]);
-        let pointedPath = 
+        let pointedPath =
             store.treeMapRenderer.getPathFromFileNode(pointedFileNode);
         //console.log(self.pointedPath);
         store.trigger(ACTION.CANVAS_POINTER_CHANGE, pointedPath, pointedFileNode);
@@ -175,7 +175,7 @@ const TreeMapCanvas = (props: {store: Store;}) => {
             ctx.viewPoint = [ctx.viewPoint[0] - dx, ctx.viewPoint[1] - dy];
             ctx.lastTouchCenter = getTouchCenter(e.touches[0], e.touches[1]);
             draw();
-        } 
+        }
         else if (e.touches.length == 1 && ctx.inSwipe) {
             // 1本指の移動操作
             const currentTouchPosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -191,7 +191,7 @@ const TreeMapCanvas = (props: {store: Store;}) => {
         }
     }
 
-    const handleTouchEnd = (e: TouchEvent) =>{
+    const handleTouchEnd = (e: TouchEvent) => {
         if (e.touches.length < 2) {  // 2本指での操作が終わったらリセット
             ctx.inPinch = false;
         }
@@ -201,7 +201,7 @@ const TreeMapCanvas = (props: {store: Store;}) => {
         if (e.touches.length < 1) { // 1本指のタッチが終了した場合もリセット
             ctx.inSwipe = false;
         }
-    }        
+    }
     // 2つのタッチ間の距離を計算
     const getTouchDistance = (touch1: Touch, touch2: Touch): number => {
         const dx = touch1.clientX - touch2.clientX;
@@ -224,22 +224,22 @@ const TreeMapCanvas = (props: {store: Store;}) => {
         if (key === "ArrowUp") {
             ctx.viewPoint = [ctx.viewPoint[0], ctx.viewPoint[1] - 50];
             draw();
-        } 
+        }
         else if (key === "ArrowDown") {
             ctx.viewPoint = [ctx.viewPoint[0], ctx.viewPoint[1] + 50];
             draw();
-        } 
+        }
         else if (key === "ArrowLeft") {
             ctx.viewPoint = [ctx.viewPoint[0] - 50, ctx.viewPoint[1]];
             draw();
-        } 
+        }
         else if (key === "ArrowRight") {
             ctx.viewPoint = [ctx.viewPoint[0] + 50, ctx.viewPoint[1]];
             draw();
-        } 
+        }
         else if (key === "+") {
             startZoomInOrOut(true, canvas.offsetWidth / 2, canvas.offsetHeight / 2);
-        } 
+        }
         else if (key === "-") {
             startZoomInOrOut(false, canvas.offsetWidth / 2, canvas.offsetHeight / 2);
         }
@@ -255,14 +255,14 @@ const TreeMapCanvas = (props: {store: Store;}) => {
         // High DPI 対策
         // サイズを変更すると canvas の中身が破棄されるので，
         // 本当に変わったときだけ反映する
-        if (ctx.oldSize[0] != width || ctx.oldSize[1] != height){
+        if (ctx.oldSize[0] != width || ctx.oldSize[1] != height) {
 
             // High DPI 対策
             let canvasCtx = canvas.getContext("2d");
             let devicePixelRatio = window.devicePixelRatio || 1;
             if (devicePixelRatio < 1) { // 縮小表示の時の対応
                 devicePixelRatio = 1;
-            }            
+            }
             let ratio = devicePixelRatio;
             canvas.width = width * ratio;
             canvas.height = height * ratio;
@@ -287,11 +287,11 @@ const TreeMapCanvas = (props: {store: Store;}) => {
     };
 
     const animateZoom = () => {
-        const newZoomLevel = ctx.zoomLevel + 
+        const newZoomLevel = ctx.zoomLevel +
             (ctx.zoomAnimationDirection ? ctx.ZOOM_ANIMATION_SPEED : -ctx.ZOOM_ANIMATION_SPEED);
         setZoomRatio(newZoomLevel, ctx.zoomBasePoint[0], ctx.zoomBasePoint[1]);
         draw();
-        if ((ctx.zoomAnimationDirection && newZoomLevel > ctx.zoomEndLevel) || 
+        if ((ctx.zoomAnimationDirection && newZoomLevel > ctx.zoomEndLevel) ||
             (!ctx.zoomAnimationDirection && newZoomLevel < ctx.zoomEndLevel)
         ) {
             if (ctx.zoomAnimationID !== null) {
@@ -332,7 +332,7 @@ const TreeMapCanvas = (props: {store: Store;}) => {
             (fileNode, isSizeMode) => props.store.fileNodeToStr(fileNode, isSizeMode)
         );
     };
-    
+
     const fitToCanvas = () => {
         const canvas: any = canvasRef.current;  // DOM
         let targetScale = Math.min(
@@ -342,44 +342,48 @@ const TreeMapCanvas = (props: {store: Store;}) => {
 
         ctx.zoomLevel = Math.log2(targetScale);
         ctx.viewPoint = [
-            -(canvas.offsetWidth - (ctx.BASE_SIZE[0]*targetScale)) / 2,
-            -(canvas.offsetHeight - (ctx.BASE_SIZE[1]*targetScale)) / 2
+            -(canvas.offsetWidth - (ctx.BASE_SIZE[0] * targetScale)) / 2,
+            -(canvas.offsetHeight - (ctx.BASE_SIZE[1] * targetScale)) / 2
         ];
         draw();
     };
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault(); // デフォルト動作を防止（ブラウザがファイルを開かないようにする）
+            console.log("Drag over"); // Add this
+
     };
 
     const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         const file = event.dataTransfer.files[0]; // ドロップされた最初のファイルを取得
         if (!file) {
-            // setError("No file dropped");
+            console.log("No file dropped");
             return;
         }
 
+        console.log("File dropped:", file.name);
         const reader = new FileReader();
         reader.onload = () => {
-            store.trigger(ACTION.FILE_IMPORT, reader.result as string);   
+            console.log("File read complete, content length:", (reader.result as string).length);
+            store.trigger(ACTION.FILE_IMPORT, reader.result as string);
         };
-        reader.onerror = () => {
-            // setError("Failed to read the file");
+        reader.onerror = (error) => {
+            console.error("Error reading file:", error);
         };
-        reader.readAsText(file); // ファイルをテキストとして読み込み
+        reader.readAsText(file);
     };
 
     // 外側の要素に 100% で入るようにする
     // canvas をインライン要素ではなく block にしておかないと div との間に隙間ができる
     // canvas の高解像度対応時にサイズを決定するために div で囲む
     return (
-        <div ref={divRef} style={{ width: "100%", height: "100%" }} 
+        <div ref={divRef} style={{ width: "100%", height: "100%" }}
             onDrop={handleDrop} onDragOver={handleDragOver}>
-            <canvas ref={canvasRef} style={{ 
-                width: "100%", height: "100%", display: "block", margin: 0, padding: 0 
+            <canvas ref={canvasRef} style={{
+                width: "100%", height: "100%", display: "block", margin: 0, padding: 0
             }} />
         </div>
-        
+
     );
 };
 
